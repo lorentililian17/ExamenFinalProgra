@@ -1,0 +1,48 @@
+import org.neo4j.driver.*;
+import static org.neo4j.driver.Values.parameters;
+
+public class PhoneDatabase {
+
+    private Driver driver;
+
+    public PhoneDatabase(String uri, String username, String password) {
+        this.driver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
+    }
+
+    public void close() {
+        driver.close();
+    }
+
+    public void createPhone(String name, String brand, String model) {
+        try (Session session = driver.session()) {
+            String query = "CREATE (p:Phone {name: $name, brand: $brand, model: $model})";
+            session.run(query, parameters("name", name, "brand", brand, "model", model));
+        }
+    }
+
+    public void getPhones() {
+        try (Session session = driver.session()) {
+            String query = "MATCH (p:Phone) RETURN p.name, p.brand, p.model";
+            Result result = session.run(query);
+            while (result.hasNext()) {
+                Record record = result.next();
+                String name = record.get("p.name").asString();
+                String brand = record.get("p.brand").asString();
+                String model = record.get("p.model").asString();
+                System.out.println("Name: " + name + ", Brand: " + brand + ", Model: " + model);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        String uri = "C:\\Users\\LILIAN\\Desktop";  
+        String username = "Lilian Lorenti";  
+        String password = "marianogalvez";  
+
+        PhoneDatabase phoneDB = new PhoneDatabase(uri, username, password);
+        phoneDB.createPhone("Phone 1", "Samsung", "Model 1");
+        phoneDB.createPhone("Phone 2", "Apple", "Model 2");
+        phoneDB.getPhones();
+        phoneDB.close();
+    }
+}
